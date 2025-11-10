@@ -48,11 +48,33 @@ class UR5eSortIKRelVisuomotorMimicEnvCfg(UR5eSortVisuomotorEnvCfg, MimicEnvCfg):
                 # Selection strategy for the source subtask segment during data generation
                 selection_strategy="nearest_neighbor_object",
                 # Optional parameters for the selection strategy function
-                selection_strategy_kwargs={"nn_k": 3},
+                #selection_strategy_kwargs={"nn_k": 3},
                 # Amount of action noise to apply during this subtask
-                action_noise=0.03,
+                action_noise=0.01,
                 # Number of interpolation steps to bridge to this subtask segment
                 num_interpolation_steps=5,
+                # Additional fixed steps for the robot to reach the necessary pose
+                num_fixed_steps=0,
+                # If True, apply action noise during the interpolation phase and execution
+                apply_noise_during_interpolation=False,
+            )
+        )
+        subtask_configs.append(
+            SubTaskConfig(
+                # Each subtask involves manipulation with respect to a single object frame.
+                object_ref=None,
+                # End of final subtask does not need to be detected
+                subtask_term_signal=None,
+                # No time offsets for the final subtask
+                subtask_term_offset_range=(0, 0),
+                # Selection strategy for source subtask segment
+                selection_strategy="nearest_neighbotabler_object",
+                # Optional parameters for the selection strategy function
+                #selection_strategy_kwargs={"nn_k": 3},
+                # Amount of action noise to apply during this subtask
+                action_noise=0.01,
+                # Number of interpolation steps to bridge to this subtask segment
+                num_interpolation_steps=15,
                 # Additional fixed steps for the robot to reach the necessary pose
                 num_fixed_steps=0,
                 # If True, apply action noise during the interpolation phase and execution

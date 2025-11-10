@@ -265,7 +265,7 @@ def object_grasped(
     robot_cfg: SceneEntityCfg,
     ee_frame_cfg: SceneEntityCfg,
     object_cfg: SceneEntityCfg,
-    diff_threshold: float = 0.06,
+    diff_threshold: float = 0.14,
 ) -> torch.Tensor:
     """Check if an object is grasped by the specified robot."""
 
@@ -304,6 +304,7 @@ def object_grasped(
                 )
                 > env.cfg.gripper_threshold,
             )
+            #print(object_cfg.name, grasped)
 
     return grasped
 

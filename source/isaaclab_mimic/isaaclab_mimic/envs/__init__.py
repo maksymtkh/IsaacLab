@@ -17,6 +17,7 @@ from .franka_stack_ik_rel_skillgen_env_cfg import FrankaCubeStackIKRelSkillgenEn
 from .franka_stack_ik_rel_visuomotor_cosmos_mimic_env_cfg import FrankaCubeStackIKRelVisuomotorCosmosMimicEnvCfg
 from .franka_stack_ik_rel_visuomotor_mimic_env_cfg import FrankaCubeStackIKRelVisuomotorMimicEnvCfg
 
+from .ur5e_sort_ik_rel_mimic_env import UR5eSortIKRelMimicEnv
 from .ur5e_sort_ik_rel_visuomotor_mimic_env_cfg import UR5eSortIKRelVisuomotorMimicEnvCfg
 
 ##

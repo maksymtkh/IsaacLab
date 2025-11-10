@@ -67,7 +67,7 @@ class EventCfg:
             "pose_range": {"x": (0.3, 0.72), "y": (-0.1, 0.55), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
             "min_separation": 0.1,
             "asset_cfgs": [
-                SceneEntityCfg("nut_m8_red"),
+                #SceneEntityCfg("nut_m8_red"),
                 SceneEntityCfg("nut_m8_green"),
                 SceneEntityCfg("nut_m8_blue"),
                 SceneEntityCfg("nut_m12_red"),
@@ -76,6 +76,19 @@ class EventCfg:
                 SceneEntityCfg("nut_m16_red"),
                 SceneEntityCfg("nut_m16_green"),
                 SceneEntityCfg("nut_m16_blue"),
+            ],
+        },
+    )
+
+    # Reset all nuts - iteration version (9 nuts)
+    randomize_nut_positions_m8 = EventTerm(
+        func=ur5e_sort_events.randomize_object_pose,
+        mode="reset",
+        params={
+            "pose_range": {"x": (0.3, 0.52), "y": (-0.1, 0.55), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
+            "min_separation": 0.1,
+            "asset_cfgs": [
+                SceneEntityCfg("nut_m8_red"),
             ],
         },
     )
@@ -112,7 +125,7 @@ class UR5eSortEnvCfg(SortEnvCfg):
         # utilities for gripper status check
         self.gripper_joint_names = ["finger.*_.*"]
         self.gripper_open_val = 0.00
-        self.gripper_threshold = 0.005
+        self.gripper_threshold = 0.02
 
         # Rigid body properties of each nut
         nut_properties = RigidBodyPropertiesCfg(
