@@ -147,10 +147,10 @@ class TerminationsCfg:
         params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m8_blue")},
     )
 
-    nut_m12_red_dropping = DoneTerm(
+    """nut_m12_red_dropping = DoneTerm(
         func=mdp.root_height_below_minimum,
         params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m12_red")},
-    )
+    )"""
 
     nut_m12_green_dropping = DoneTerm(
         func=mdp.root_height_below_minimum,
@@ -162,10 +162,10 @@ class TerminationsCfg:
         params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m12_blue")},
     )
 
-    nut_m16_red_dropping = DoneTerm(
+    """nut_m16_red_dropping = DoneTerm(
         func=mdp.root_height_below_minimum,
         params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m16_red")},
-    )
+    )"""
 
     nut_m16_green_dropping = DoneTerm(
         func=mdp.root_height_below_minimum,
