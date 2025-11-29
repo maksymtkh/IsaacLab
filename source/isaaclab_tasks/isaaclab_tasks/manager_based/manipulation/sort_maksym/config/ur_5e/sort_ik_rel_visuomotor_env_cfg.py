@@ -186,19 +186,59 @@ class UR5eSortVisuomotorEnvCfg(sort_joint_pos_env_cfg.UR5eSortEnvCfg):
         # Set cameras
         # Set wrist camera
 
+        """# Camera https://docs.baslerweb.com/a2a4200-40ucpro
+        # Linse https://www.artisantg.com/info/FujiFilm_Fujinon_DF6HA_1B_Datasheet_20221281340.pdf?srsltid=AfmBOordtaVQVN59VcazBFQ4unfNV58tdwuFEP53YC3J5YpSuHa7VDs5
         self.scene.wrist_cam = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/camera",
-            update_period=0.0,
-            height=84,
-            width=84,
-            data_types=["rgb"],
+            offset=CameraCfg.OffsetCfg(
+                pos=(-0.035, 0.0, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
+            ),
             spawn=sim_utils.FisheyeCameraCfg(
-                focal_length=0.6, f_stop=4, horizontal_aperture=20.955, clipping_range=(0.01, 5)
+                projection_type="fisheyePolynomial",
+                fisheye_nominal_width=2160,
+                fisheye_nominal_height=3600,
+                fisheye_optical_centre_x=1080.0,
+                fisheye_optical_centre_y=1800.0,
+                focal_length=0.6, 
+                fisheye_max_fov=89.2,
+                f_stop=4,
+                focus_distance=0.5,
+                clipping_range=(0.01, 2),
+            ),
+            data_types=["rgb"],
+            width=2160,
+            height=3600,
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
+            update_period=40,
+        )"""
+
+        # Camera Amazon https://www.amazon.de/gp/product/B07CTJ11YM/ref=ox_sc_act_title_2?smid=A1XYWUUU38OZI5&psc=1
+        self.scene.wrist_cam = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
+            update_period=30,
+            height=600,
+            width=800,
+            data_types=["rgb"],
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=12, focus_distance=100.0,
+            ),
+            offset=CameraCfg.OffsetCfg(
+                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
+            ),
+        )
+
+        """self.scene.wrist_cam = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
+            update_period=40,
+            height=3600,
+            width=2128,
+            data_types=["rgb"],
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=0.6, f_stop=4
             ),
             offset=CameraCfg.OffsetCfg(
                 pos=(-0.09, 0.0, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
             ),
-        )
+        )"""
 
         """# Set table view camera
         self.scene.table_cam = CameraCfg(

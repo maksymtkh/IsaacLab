@@ -70,17 +70,17 @@ class EventCfg:
                 #SceneEntityCfg("nut_m8_red"),
                 SceneEntityCfg("nut_m8_green"),
                 SceneEntityCfg("nut_m8_blue"),
-                SceneEntityCfg("nut_m12_red"),
+                #SceneEntityCfg("nut_m12_red"),
                 SceneEntityCfg("nut_m12_green"),
                 SceneEntityCfg("nut_m12_blue"),
-                SceneEntityCfg("nut_m16_red"),
+                #SceneEntityCfg("nut_m16_red"),
                 SceneEntityCfg("nut_m16_green"),
                 SceneEntityCfg("nut_m16_blue"),
             ],
         },
     )
 
-    # Reset all nuts - iteration version (9 nuts)
+    # Reset red nuts
     randomize_nut_positions_m8 = EventTerm(
         func=ur5e_sort_events.randomize_object_pose,
         mode="reset",
@@ -163,6 +163,11 @@ class UR5eSortEnvCfg(SortEnvCfg):
 
         for size in nut_sizes:
             for color_name, color_value in nut_colors.items():
+
+                # Skip red for sizes other than m8
+                if color_name == "red" and size != "m8":
+                    continue
+
                 setattr(
                     self.scene,
                     f"nut_{size}_{color_name}",
