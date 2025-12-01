@@ -177,7 +177,7 @@
             "rgb": {
                 "core_class": "VisualCore",
                 "core_kwargs": {
-                    "feature_dimension": 128,
+                    "feature_dimension": 64,
                     "flatten": true,
                     "backbone_class": "ResNet18Conv",
                     "backbone_kwargs": {
