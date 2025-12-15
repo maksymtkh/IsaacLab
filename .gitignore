@@ -68,5 +68,9 @@ _build
 # Tests
 tests/
 
+# Visuals
+visuals/plot
+visuals/plots
+
 # Docker history
 .isaac-lab-docker-history

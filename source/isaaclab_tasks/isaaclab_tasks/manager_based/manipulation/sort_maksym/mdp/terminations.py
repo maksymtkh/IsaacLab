@@ -20,110 +20,6 @@ from isaaclab.managers import SceneEntityCfg
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
-
-def object_a_is_into_b(
-    env: ManagerBasedRLEnv,
-    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
-    object_a_cfg: SceneEntityCfg = SceneEntityCfg("object_a"),
-    object_b_cfg: SceneEntityCfg = SceneEntityCfg("object_b"),
-    xy_threshold: float = 0.03,  # xy_distance_threshold
-    height_threshold: float = 0.04,  # height_distance_threshold
-    height_diff: float = 0.0,  # expected height_diff
-) -> torch.Tensor:
-    """Check if an object a is put into another object b by the specified robot."""
-
-    robot: Articulation = env.scene[robot_cfg.name]
-    object_a: RigidObject = env.scene[object_a_cfg.name]
-    object_b: RigidObject = env.scene[object_b_cfg.name]
-
-    # check object a is into object b
-    pos_diff = object_a.data.root_pos_w - object_b.data.root_pos_w
-    height_dist = torch.linalg.vector_norm(pos_diff[:, 2:], dim=1)
-    xy_dist = torch.linalg.vector_norm(pos_diff[:, :2], dim=1)
-
-    success = torch.logical_and(xy_dist < xy_threshold, (height_dist - height_diff) < height_threshold)
-
-    # Check gripper positions
-    if hasattr(env.cfg, "gripper_joint_names"):
-        gripper_joint_ids, _ = robot.find_joints(env.cfg.gripper_joint_names)
-        assert len(gripper_joint_ids) == 2, "Terminations only support parallel gripper for now"
-
-        success = torch.logical_and(
-            success,
-            torch.abs(torch.abs(robot.data.joint_pos[:, gripper_joint_ids[0]]) - env.cfg.gripper_open_val)
-            < env.cfg.gripper_threshold,
-        )
-        success = torch.logical_and(
-            success,
-            torch.abs(torch.abs(robot.data.joint_pos[:, gripper_joint_ids[1]]) - env.cfg.gripper_open_val)
-            < env.cfg.gripper_threshold,
-        )
-    else:
-        raise ValueError("No gripper_joint_names found in environment config")
-
-    return success
-
-#In case function def object_a_is_into_b doesnt work!!! Copy pasted from another environment in isac lab
-def task_done_pick_place(
-    env: ManagerBasedRLEnv,
-    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
-    right_wrist_max_x: float = 0.26,
-    min_x: float = 0.40,
-    max_x: float = 0.85,
-    min_y: float = 0.35,
-    max_y: float = 0.60,
-    max_height: float = 1.10,
-    min_vel: float = 0.20,
-) -> torch.Tensor:
-    """Determine if the object placement task is complete.
-
-    This function checks whether all success conditions for the task have been met:
-    1. object is within the target x/y range
-    2. object is below a minimum height
-    3. object velocity is below threshold
-    4. Right robot wrist is retracted back towards body (past a given x pos threshold)
-
-    Args:
-        env: The RL environment instance.
-        object_cfg: Configuration for the object entity.
-        right_wrist_max_x: Maximum x position of the right wrist for task completion.
-        min_x: Minimum x position of the object for task completion.
-        max_x: Maximum x position of the object for task completion.
-        min_y: Minimum y position of the object for task completion.
-        max_y: Maximum y position of the object for task completion.
-        max_height: Maximum height (z position) of the object for task completion.
-        min_vel: Minimum velocity magnitude of the object for task completion.
-
-    Returns:
-        Boolean tensor indicating which environments have completed the task.
-    """
-    # Get object entity from the scene
-    object: RigidObject = env.scene[object_cfg.name]
-
-    # Extract wheel position relative to environment origin
-    object_x = object.data.root_pos_w[:, 0] - env.scene.env_origins[:, 0]
-    object_y = object.data.root_pos_w[:, 1] - env.scene.env_origins[:, 1]
-    object_height = object.data.root_pos_w[:, 2] - env.scene.env_origins[:, 2]
-    object_vel = torch.abs(object.data.root_vel_w)
-
-    # Get right wrist position relative to environment origin
-    robot_body_pos_w = env.scene["robot"].data.body_pos_w
-    right_eef_idx = env.scene["robot"].data.body_names.index("right_hand_roll_link")
-    right_wrist_x = robot_body_pos_w[:, right_eef_idx, 0] - env.scene.env_origins[:, 0]
-
-    # Check all success conditions and combine with logical AND
-    done = object_x < max_x
-    done = torch.logical_and(done, object_x > min_x)
-    done = torch.logical_and(done, object_y < max_y)
-    done = torch.logical_and(done, object_y > min_y)
-    done = torch.logical_and(done, object_height < max_height)
-    done = torch.logical_and(done, right_wrist_x < right_wrist_max_x)
-    done = torch.logical_and(done, object_vel[:, 0] < min_vel)
-    done = torch.logical_and(done, object_vel[:, 1] < min_vel)
-    done = torch.logical_and(done, object_vel[:, 2] < min_vel)
-
-    return done
-
 def task_done_place_with_gripper_check(
     env: ManagerBasedRLEnv,
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
@@ -141,12 +37,20 @@ def task_done_place_with_gripper_check(
       4) gripper fingers are near open position
     """
 
-    # Define the XY zones
+    # Define the XY zones for bigger working area
     zones = {
-        "left":   {"min_x": 0.6, "max_x": 0.72, "min_y": -0.1, "max_y": 0.11},
+        "left":   {"min_x": 0.6, "max_x": 0.72, "min_y": 0.036, "max_y": 0.16},
         "middle": {"min_x": 0.6, "max_x": 0.72, "min_y": 0.13, "max_y": 0.34},
         "right":  {"min_x": 0.6, "max_x": 0.72, "min_y": 0.36,  "max_y": 0.57},
     }
+
+    """# Define the XY zones for smaller working area
+    # !!!Just for left was changed
+    zones = {
+        "left":   {"min_x": 0.59, "max_x": 0.69, "min_y": -0.1, "max_y": 0.11},
+        "middle": {"min_x": 0.6, "max_x": 0.72, "min_y": 0.13, "max_y": 0.34},
+        "right":  {"min_x": 0.6, "max_x": 0.72, "min_y": 0.36,  "max_y": 0.57},
+    }"""
 
     if zone not in zones:
         raise ValueError(f"Invalid zone '{zone}'. Must be one of: {list(zones.keys())}")
@@ -203,4 +107,42 @@ def task_done_place_with_gripper_check(
 
     return done
 
+def height_below_minimum(
+    env: ManagerBasedRLEnv,
+    pose_range: dict[str, float],
+    asset_cfgs: list[SceneEntityCfg],
+) -> torch.Tensor:
+    """Terminate if ANY rigid object from asset_cfgs has height (z) below the minimum threshold."""
+    minimum_height = pose_range["z"]
+
+    terminate = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+
+    for asset_cfg in asset_cfgs:
+        asset: RigidObject = env.scene[asset_cfg.name]
+        height = asset.data.root_pos_w[:, 2]
+        terminate |= height < minimum_height
+
+    return terminate
+
+def position_xy_out_of_bounds(
+    env: ManagerBasedRLEnv,
+    pose_range: dict[str, tuple[float, float]],
+    asset_cfgs: list[SceneEntityCfg],
+) -> torch.Tensor:
+    """Terminate if ANY rigid object from asset_cfgs leaves the allowed XY bounds."""
+    min_x, max_x = pose_range["x"]
+    min_y, max_y = pose_range["y"]
+
+    terminate = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+
+    for asset_cfg in asset_cfgs:
+        asset: RigidObject = env.scene[asset_cfg.name]
+        root_pos = asset.data.root_pos_w[:, :2]  # (x, y)
+
+        out_x = (root_pos[:, 0] < min_x) | (root_pos[:, 0] > max_x)
+        out_y = (root_pos[:, 1] < min_y) | (root_pos[:, 1] > max_y)
+
+        terminate |= out_x | out_y
+
+    return terminate
 

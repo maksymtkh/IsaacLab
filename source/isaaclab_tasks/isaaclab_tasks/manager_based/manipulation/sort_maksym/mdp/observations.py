@@ -18,19 +18,22 @@ if TYPE_CHECKING:
 
 
 # === Common nut definitions ===
-NUT_SIZES = ["m8", "m12", "m16"]
-NUT_COLORS = ["red", "green", "blue"]
-NUT_NAMES = [
-    f"nut_{size}_{color}"
-    for size in NUT_SIZES
-    for color in NUT_COLORS
-    if not (color == "red" and size != "m8")
+ALL_NUT_NAMES = [
+    "nut_m8_red",
+    "nut_m8_green",
+    "nut_m8_blue",
+    "nut_m12_red",
+    "nut_m12_green",
+    "nut_m12_blue",
+    "nut_m16_red",
+    "nut_m16_green",
+    "nut_m16_blue",
 ]
 
 def nut_positions_in_world_frame(env: ManagerBasedRLEnv) -> torch.Tensor:
     """The position of all nuts (m8, m12, m16 × red, green, blue) in the world frame."""
     nut_positions = []
-    for nut_name in NUT_NAMES:
+    for nut_name in ALL_NUT_NAMES:
         nut: RigidObject = env.scene[nut_name]
         nut_positions.append(nut.data.root_pos_w)
     return torch.cat(nut_positions, dim=1)
@@ -45,7 +48,7 @@ def instance_randomize_nut_positions_in_world_frame(
     nut_positions_all = []
 
     # Iterate through all defined nuts
-    for nut_name in NUT_NAMES:
+    for nut_name in ALL_NUT_NAMES:
         nut: RigidObjectCollection = env.scene[nut_name]
         nut_pos_w = []
         for env_id in range(env.num_envs):
@@ -65,7 +68,7 @@ def nut_orientations_in_world_frame(
 ) -> torch.Tensor:
     """The orientation of all nuts (m8, m12, m16 × red, green, blue) in the world frame."""
     nut_orientations = []
-    for nut_name in NUT_NAMES:
+    for nut_name in ALL_NUT_NAMES:
         nut: RigidObject = env.scene[nut_name]
         nut_orientations.append(nut.data.root_quat_w)
 
@@ -82,7 +85,7 @@ def instance_randomize_nut_orientations_in_world_frame(
     nut_orientations_all = []
 
     # Iterate through all defined nuts
-    for nut_name in NUT_NAMES:
+    for nut_name in ALL_NUT_NAMES:
         nut: RigidObjectCollection = env.scene[nut_name]
         nut_quat_w = []
         for env_id in range(env.num_envs):
@@ -100,63 +103,47 @@ def object_obs(
     env: ManagerBasedRLEnv,
     ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
 ) -> torch.Tensor:
-    """Object observations (in world frame):
-        - positions (world - env_origin) for all nuts in NUT_NAMES
-        - quaternions (world) for all nuts in NUT_NAMES
-        - gripper->nut vectors for all nuts in NUT_NAMES
-        - pairwise position deltas between sizes (m8, m12, m16) per color,
-          **only for size-color combinations that exist in NUT_NAMES**.
+    """
+    Object observations (for all nuts in ALL_NUT_NAMES):
+
+        For each nut:
+            - position (world - env_origin)  -> env-frame positions
+            - quaternion (world frame)
+            - gripper-to-nut vector (world frame)
+
+    Final tensor layout (concatenated along dim=1):
+        [pos_nut_1, ..., pos_nut_N,
+         quat_nut_1, ..., quat_nut_N,
+         ee_to_nut_1, ..., ee_to_nut_N]
     """
     # End-effector world pose
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
-    ee_pos_w = ee_frame.data.target_pos_w[:, 0, :]
+    ee_pos_w = ee_frame.data.target_pos_w[:, 0, :]  # [B, 3]
 
-    # Gather per-nut tensors in canonical order defined by NUT_NAMES
     pos_list = []
     quat_list = []
     ee_rel_list = []
-    for nut_name in NUT_NAMES:
+
+    for nut_name in ALL_NUT_NAMES:
         nut: RigidObject = env.scene[nut_name]
-        pos_w = nut.data.root_pos_w
-        quat_w = nut.data.root_quat_w
-        pos_list.append(pos_w - env.scene.env_origins)  # positions in env frame
-        quat_list.append(quat_w)
-        ee_rel_list.append(pos_w - ee_pos_w)            # ee -> nut in world frame
+        pos_w = nut.data.root_pos_w          # [B, 3]
+        quat_w = nut.data.root_quat_w        # [B, 4]
 
-    # Build a name -> index lookup once (so we can see which nuts exist)
-    name_to_idx = {name: i for i, name in enumerate(NUT_NAMES)}
+        # positions in env frame (world - env_origin)
+        pos_list.append(pos_w - env.scene.env_origins)  # [B, 3]
 
-    # Per-color pairwise deltas between sizes that actually exist
-    pairwise_list = []
-    for color in NUT_COLORS:
-        # Look up indices for this color and sizes m8, m12, m16 (if present)
-        idx_m8  = name_to_idx.get(f"nut_m8_{color}")
-        idx_m12 = name_to_idx.get(f"nut_m12_{color}")
-        idx_m16 = name_to_idx.get(f"nut_m16_{color}")
+        # quaternions in world frame
+        quat_list.append(quat_w)                         # [B, 4]
 
-        # Helper: append delta if both ends exist
-        def add_delta(idx_a, idx_b):
-            if idx_a is None or idx_b is None:
-                return
-            # convert back to world positions for deltas
-            pos_a_w = pos_list[idx_a] + env.scene.env_origins
-            pos_b_w = pos_list[idx_b] + env.scene.env_origins
-            pairwise_list.append(pos_a_w - pos_b_w)
+        # gripper -> nut vector in world frame
+        ee_rel_list.append(pos_w - ee_pos_w)            # [B, 3]
 
-        # Mirror original logic, but only when both nuts are present
-        add_delta(idx_m8,  idx_m12)  # m8 -> m12
-        add_delta(idx_m12, idx_m16)  # m12 -> m16
-        add_delta(idx_m8,  idx_m16)  # m8 -> m16
-
-    # Concatenate everything
+    # Concatenate all parts
     obs_parts = [
-        torch.cat(pos_list, dim=1),       # [B, 3 * num_nuts]
-        torch.cat(quat_list, dim=1),      # [B, 4 * num_nuts]
-        torch.cat(ee_rel_list, dim=1),    # [B, 3 * num_nuts]
+        torch.cat(pos_list, dim=1),    # [B, 3 * num_nuts]
+        torch.cat(quat_list, dim=1),   # [B, 4 * num_nuts]
+        torch.cat(ee_rel_list, dim=1)  # [B, 3 * num_nuts]
     ]
-
-    if pairwise_list:
-        obs_parts.append(torch.cat(pairwise_list, dim=1))  # [B, 3 * num_pairs]
 
     return torch.cat(obs_parts, dim=1)
 
@@ -183,7 +170,7 @@ def instance_randomize_object_obs(
     # Collect per-nut world positions & orientations using the focus index per nut
     pos_w_list = []
     quat_w_list = []
-    for i, nut_name in enumerate(NUT_NAMES):
+    for i, nut_name in enumerate(ALL_NUT_NAMES):
         nut: RigidObjectCollection = env.scene[nut_name]
         pos_each_env = []
         quat_each_env = []
@@ -203,9 +190,9 @@ def instance_randomize_object_obs(
     # Per-color pairwise deltas (world): (m8 - m12), (m12 - m16), (m8 - m16)
     pairwise_list = []
     for color in ["red", "green", "blue"]:
-        i_m8  = NUT_NAMES.index(f"nut_m8_{color}")
-        i_m12 = NUT_NAMES.index(f"nut_m12_{color}")
-        i_m16 = NUT_NAMES.index(f"nut_m16_{color}")
+        i_m8  = ALL_NUT_NAMES.index(f"nut_m8_{color}")
+        i_m12 = ALL_NUT_NAMES.index(f"nut_m12_{color}")
+        i_m16 = ALL_NUT_NAMES.index(f"nut_m16_{color}")
 
         p8  = pos_w_list[i_m8]
         p12 = pos_w_list[i_m12]

@@ -26,6 +26,33 @@ from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
 from isaaclab_assets.robots.universal_robots_maksym import UR5e_wr_gripper_CFG
 from numpy import pi
 
+# -----------------------------------------------------------------------------
+# General nut configuration (centralized + reusable)
+# -----------------------------------------------------------------------------
+
+ALL_NUT_CFGS = [
+    SceneEntityCfg("nut_m8_red"),
+    SceneEntityCfg("nut_m8_green"),
+    SceneEntityCfg("nut_m8_blue"),
+    SceneEntityCfg("nut_m12_red"),
+    SceneEntityCfg("nut_m12_green"),
+    SceneEntityCfg("nut_m12_blue"),
+    SceneEntityCfg("nut_m16_red"),
+    SceneEntityCfg("nut_m16_green"),
+    SceneEntityCfg("nut_m16_blue"),
+]
+
+TARGET_NUT_CFG = SceneEntityCfg("nut_m8_red")
+
+COLOR_MAP = {
+    "red":   (1.0, 0.0, 0.0),
+    "green": (0.0, 1.0, 0.0),
+    "blue":  (0.0, 0.0, 1.0),
+}
+
+# -----------------------------------------------------------------------------
+# Main
+# -----------------------------------------------------------------------------
 
 @configclass
 class EventCfg:
@@ -36,13 +63,14 @@ class EventCfg:
         func=ur5e_sort_events.set_default_joint_pose,
         mode="reset",
         params={
+            # Default for small working area:
             "default_pose": [
-                7 /360*2*pi,            # shoulder_pan_joint
-                -50 /360*2*pi,     # shoulder_lift_joint
-                25 /360*2*pi,      # elbow_joint
-                -70 /360*2*pi,     # wrist_1_joint
+                9 /360*2*pi,            # shoulder_pan_joint
+                -65 /360*2*pi,     # shoulder_lift_joint
+                72 /360*2*pi,      # elbow_joint
+                -100 /360*2*pi,     # wrist_1_joint
                 -90 /360*2*pi,     # wrist_2_joint
-                95 /360*2*pi,      # wrist_3_joint
+                99 /360*2*pi,      # wrist_3_joint
                 0.0430,                  # gripper_joint_left
                 0.0430,                  # gripper_joint_right
             ],
@@ -59,36 +87,34 @@ class EventCfg:
         },
     )
 
-    # Reset all nuts - iteration version (9 nuts)
+    """# Reset all nuts - iteration version (9 nuts)
     randomize_nut_positions = EventTerm(
         func=ur5e_sort_events.randomize_object_pose,
         mode="reset",
         params={
-            "pose_range": {"x": (0.3, 0.72), "y": (-0.1, 0.55), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
+            "pose_range": {"x": (0.3, 0.68), "y": (0.04, 0.43), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
             "min_separation": 0.1,
-            "asset_cfgs": [
-                #SceneEntityCfg("nut_m8_red"),
-                SceneEntityCfg("nut_m8_green"),
-                SceneEntityCfg("nut_m8_blue"),
-                #SceneEntityCfg("nut_m12_red"),
-                SceneEntityCfg("nut_m12_green"),
-                SceneEntityCfg("nut_m12_blue"),
-                #SceneEntityCfg("nut_m16_red"),
-                SceneEntityCfg("nut_m16_green"),
-                SceneEntityCfg("nut_m16_blue"),
-            ],
+            "asset_cfgs": ALL_NUT_CFGS,
         },
-    )
+    )"""
 
     # Reset red nuts
     randomize_nut_positions_m8 = EventTerm(
         func=ur5e_sort_events.randomize_object_pose,
         mode="reset",
         params={
-            "pose_range": {"x": (0.3, 0.52), "y": (-0.1, 0.55), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
+            "pose_range": {"x": (0.3, 0.57), "y": (0.04, 0.43), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
             "min_separation": 0.1,
             "asset_cfgs": [
                 SceneEntityCfg("nut_m8_red"),
+                SceneEntityCfg("nut_m8_green"),
+                SceneEntityCfg("nut_m8_blue"),
+                SceneEntityCfg("nut_m12_red"),
+                SceneEntityCfg("nut_m12_green"),
+                SceneEntityCfg("nut_m12_blue"),
+                SceneEntityCfg("nut_m16_red"),
+                SceneEntityCfg("nut_m16_green"),
+                SceneEntityCfg("nut_m16_blue"),
             ],
         },
     )
@@ -137,57 +163,34 @@ class UR5eSortEnvCfg(SortEnvCfg):
             disable_gravity=False,
         )
 
-        """In case the iteration version is not used, here is the single nut spawn code:
-        # Nut M8
-        self.scene.nut_m8 = RigidObjectCfg(
-            prim_path="{ENV_REGEX_NS}/Nut_M8",
-            init_state=RigidObjectCfg.InitialStateCfg(pos=(0.85, 0.25, 0.03), rot=(1.0, 0.0, 0.0, 0.0)),
-            spawn=UsdFileCfg(
-                #usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Factory/factory_nut_m8_loose/factory_nut_m8_loose.usd",
-                #usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Factory/factory_nut_m16.usd",
-                usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Nuts/nut_m8.usd",
-                scale=(1.0, 1.0, 1.0),
-                rigid_props=nut_properties,
-                visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0, 0.0, 0.0)),
-            ),
-        )"""
-
         # Iteration version:
         # Spawn multiple nut sizes and colors (iteration version)
-        nut_sizes = ["m8", "m12", "m16"]
-        nut_colors = {
-            "red":   (1.0, 0.0, 0.0),
-            "green": (0.0, 1.0, 0.0),
-            "blue":  (0.0, 0.0, 1.0),
-        }
 
-        for size in nut_sizes:
-            for color_name, color_value in nut_colors.items():
+        for asset_cfg in ALL_NUT_CFGS:
 
-                # Skip red for sizes other than m8
-                if color_name == "red" and size != "m8":
-                    continue
+            # asset_cfg.name is like "nut_m8_red"
+            # extract size and color
+            _, size, color = asset_cfg.name.split("_")   # ["nut", "m8", "red"]
 
-                setattr(
-                    self.scene,
-                    f"nut_{size}_{color_name}",
-                    RigidObjectCfg(
-                        # Keep literal {ENV_REGEX_NS}, interpolate size/color
-                        prim_path=f"{{ENV_REGEX_NS}}/Nut_{size.upper()}_{color_name}",
-                        init_state=RigidObjectCfg.InitialStateCfg(
-                            pos=(0.85, 0.25, 0.0),
-                            rot=(1.0, 0.0, 0.0, 0.0),
-                        ),
-                        spawn=UsdFileCfg(
-                            usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Nuts/nut_{size}.usd",
-                            scale=(1.0, 1.0, 1.0),
-                            rigid_props=nut_properties,
-                            visual_material=sim_utils.PreviewSurfaceCfg(
-                                diffuse_color=color_value
-                            ),
+            setattr(
+                self.scene,
+                asset_cfg.name,            # attribute name: "nut_m8_red"
+                RigidObjectCfg(
+                    prim_path=f"{{ENV_REGEX_NS}}/Nut_{size.upper()}_{color}",  # "/Nut_M8_red"
+                    init_state=RigidObjectCfg.InitialStateCfg(
+                        pos=(0.85, 0.25, 0.0),
+                        rot=(1.0, 0.0, 0.0, 0.0),
+                    ),
+                    spawn=UsdFileCfg(
+                        usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Nuts/nut_{size}.usd",  # "nut_m8.usd"
+                        scale=(1.0, 1.0, 1.0),
+                        rigid_props=nut_properties,
+                        visual_material=sim_utils.PreviewSurfaceCfg(
+                            diffuse_color=COLOR_MAP[color],
                         ),
                     ),
-                )
+                ),
+            )
 
 
         # Listens to the required transforms

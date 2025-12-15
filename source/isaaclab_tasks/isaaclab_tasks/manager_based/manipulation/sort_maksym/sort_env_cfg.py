@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import MISSING
+from numpy import pi
 
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
@@ -20,6 +21,24 @@ from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 
 from . import mdp
+
+# -----------------------------------------------------------------------------
+# General nut configuration (centralized + reusable)
+# -----------------------------------------------------------------------------
+
+ALL_NUT_CFGS = [
+    SceneEntityCfg("nut_m8_red"),
+    SceneEntityCfg("nut_m8_green"),
+    SceneEntityCfg("nut_m8_blue"),
+    SceneEntityCfg("nut_m12_red"),
+    SceneEntityCfg("nut_m12_green"),
+    SceneEntityCfg("nut_m12_blue"),
+    SceneEntityCfg("nut_m16_red"),
+    SceneEntityCfg("nut_m16_green"),
+    SceneEntityCfg("nut_m16_blue"),
+]
+
+TARGET_NUT_CFG = SceneEntityCfg("nut_m8_red")
 
 
 ##
@@ -41,7 +60,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0], rot=[0, 0, 0, 1]),
-        spawn=UsdFileCfg(usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Table/table_complete_1.usd"),
+        spawn=UsdFileCfg(usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Table_smallerwa/table_complete.usd"),
     )
 
     # plane
@@ -109,7 +128,7 @@ class ObservationsCfg:
             params={
                 "robot_cfg": SceneEntityCfg("robot"),
                 "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-                "object_cfg": SceneEntityCfg("nut_m8_red"),
+                "object_cfg": TARGET_NUT_CFG,
             },
         )
 
@@ -130,78 +149,54 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-    # === Done terms for all 9 nuts (m8, m12, m16 × red, green, blue) ===
+    # === Nuts are under the table ===
 
-    nut_m8_red_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m8_red")},
-    )
-
-    nut_m8_green_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m8_green")},
-    )
-
-    nut_m8_blue_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m8_blue")},
-    )
-
-    """nut_m12_red_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m12_red")},
-    )"""
-
-    nut_m12_green_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m12_green")},
-    )
-
-    nut_m12_blue_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m12_blue")},
-    )
-
-    """nut_m16_red_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m16_red")},
-    )"""
-
-    nut_m16_green_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m16_green")},
-    )
-
-    nut_m16_blue_dropping = DoneTerm(
-        func=mdp.root_height_below_minimum,
-        params={"minimum_height": -0.025, "asset_cfg": SceneEntityCfg("nut_m16_blue")},
-    )
-
-
-    '''success = DoneTerm(
-        func=mdp.object_a_is_into_b,
+    nut_height_below_minimum = DoneTerm(
+        func=mdp.height_below_minimum,
         params={
-            "robot_cfg": SceneEntityCfg("robot"),
-            "object_a_cfg": SceneEntityCfg("nut_m8_red"),
-            "object_b_cfg": SceneEntityCfg("blue_sorting_bin"),
-            "xy_threshold": 0.10,
-            "height_diff": 0.06,
-            "height_threshold": 0.04,
+            "pose_range": {"z": -0.025},   # minimum allowed height
+            "asset_cfgs": ALL_NUT_CFGS,
         },
-    )'''
+    )
 
-    # === Specific term for nut_m8_red into left zone ===
+    # === Nuts are out of the workig area ===
+
+    nut_out_of_bounds = DoneTerm(
+        func=mdp.position_xy_out_of_bounds,
+        params={
+            "pose_range": {
+                "x": (0.29, 0.69),
+                "y": (0.03, 0.44),
+            },
+            "asset_cfgs": ALL_NUT_CFGS,
+        },
+    )
+
+    # === Robot joint manual safety limits ===
+
+    robot_joint_out_of_manual_limits = DoneTerm(
+        func=mdp.joint_pos_out_of_manual_limit,
+        params={
+            "bounds": (-100 /360*2*pi, -5 /360*2*pi),  # radians
+            "asset_cfg": SceneEntityCfg(
+                name="robot",
+                joint_ids=[1],  # shoulder_lift_joint, UR5e
+            ),
+        },
+    )
+
+    # === Specific term for TARGET_NUT into left zone ===
 
     success = DoneTerm(
-    func=mdp.task_done_place_with_gripper_check,
-    params={
-        "robot_cfg": SceneEntityCfg("robot"),
-        "object_cfg": SceneEntityCfg("nut_m8_red"),
-        "zone": "left",
-        "max_height": 0.1,
-        "vel_threshold": 0.1,
-    },
-)
+        func=mdp.task_done_place_with_gripper_check,
+        params={
+            "robot_cfg": SceneEntityCfg("robot"),
+            "object_cfg": TARGET_NUT_CFG,
+            "zone": "left",
+            "max_height": 0.1,
+            "vel_threshold": 0.1,
+        },
+    )
 
 
 

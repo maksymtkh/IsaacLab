@@ -24,6 +24,23 @@ from . import sort_joint_pos_env_cfg
 ##
 from isaaclab_assets.robots.universal_robots_maksym import UR5e_HIGH_PD_CFG  # isort: skip
 
+# -----------------------------------------------------------------------------
+# General nut configuration (centralized + reusable)
+# -----------------------------------------------------------------------------
+
+ALL_NUT_CFGS = [
+    SceneEntityCfg("nut_m8_red"),
+    SceneEntityCfg("nut_m8_green"),
+    SceneEntityCfg("nut_m8_blue"),
+    SceneEntityCfg("nut_m12_red"),
+    SceneEntityCfg("nut_m12_green"),
+    SceneEntityCfg("nut_m12_blue"),
+    SceneEntityCfg("nut_m16_red"),
+    SceneEntityCfg("nut_m16_green"),
+    SceneEntityCfg("nut_m16_blue"),
+]
+
+TARGET_NUT_CFG = SceneEntityCfg("nut_m8_red")
 
 @configclass
 class EventCfg(sort_joint_pos_env_cfg.EventCfg):
@@ -140,7 +157,7 @@ class ObservationsCfg:
             params={
                 "robot_cfg": SceneEntityCfg("robot"),
                 "ee_frame_cfg": SceneEntityCfg("ee_frame"),
-                "object_cfg": SceneEntityCfg("nut_m8_red"),
+                "object_cfg": TARGET_NUT_CFG,
             },
         )
 
@@ -219,7 +236,7 @@ class UR5eSortVisuomotorEnvCfg(sort_joint_pos_env_cfg.UR5eSortEnvCfg):
             width=800,
             data_types=["rgb"],
             spawn=sim_utils.PinholeCameraCfg(
-                focal_length=12, focus_distance=100.0,
+                focal_length=12, focus_distance=0.5,
             ),
             offset=CameraCfg.OffsetCfg(
                 pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
