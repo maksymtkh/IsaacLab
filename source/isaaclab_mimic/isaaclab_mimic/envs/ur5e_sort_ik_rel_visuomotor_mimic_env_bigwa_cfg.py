@@ -6,10 +6,17 @@
 from isaaclab.envs.mimic_env_cfg import MimicEnvCfg, SubTaskConfig
 from isaaclab.utils import configclass
 
-from isaaclab_tasks.manager_based.manipulation.sort_maksym.config.ur_5e.sort_ik_rel_visuomotor_env_cfg import (
+# -----------------------------------------------------------------------------
+# Specific parameters for UR5e
+# -----------------------------------------------------------------------------
+
+from isaaclab_tasks.manager_based.manipulation.sort_maksym.config.ur_5e.sort_ik_rel_visuomotor_env_bigwa_cfg import (
     UR5eSortVisuomotorEnvCfg,
 )
 
+# -----------------------------------------------------------------------------
+# Main - same for all environments
+# -----------------------------------------------------------------------------
 
 @configclass
 class UR5eSortIKRelVisuomotorMimicEnvCfg(UR5eSortVisuomotorEnvCfg, MimicEnvCfg):

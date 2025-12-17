@@ -22,40 +22,20 @@ if TYPE_CHECKING:
 
 def task_done_place_with_gripper_check(
     env: ManagerBasedRLEnv,
+    zone_cfg: dict,
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
-    zone: str = "middle",  # "left", "middle", or "right"
     max_height: float = 1.10,
     vel_threshold: float = 0.20,
 ) -> torch.Tensor:
     """
     Determine if the object placement task is complete.
     The function checks if:
-      1) the object is within the selected XY placement zone ("left", "middle", or "right")
+      1) the object is within the selected XY placement zone ({"min_x": 0.59, "max_x": 0.69, "min_y": -0.1, "max_y": 0.11})
       2) the object is below the given height
       3) object velocity is below the given threshold
       4) gripper fingers are near open position
     """
-
-    # Define the XY zones for bigger working area
-    zones = {
-        "left":   {"min_x": 0.6, "max_x": 0.72, "min_y": 0.036, "max_y": 0.16},
-        "middle": {"min_x": 0.6, "max_x": 0.72, "min_y": 0.13, "max_y": 0.34},
-        "right":  {"min_x": 0.6, "max_x": 0.72, "min_y": 0.36,  "max_y": 0.57},
-    }
-
-    """# Define the XY zones for smaller working area
-    # !!!Just for left was changed
-    zones = {
-        "left":   {"min_x": 0.59, "max_x": 0.69, "min_y": -0.1, "max_y": 0.11},
-        "middle": {"min_x": 0.6, "max_x": 0.72, "min_y": 0.13, "max_y": 0.34},
-        "right":  {"min_x": 0.6, "max_x": 0.72, "min_y": 0.36,  "max_y": 0.57},
-    }"""
-
-    if zone not in zones:
-        raise ValueError(f"Invalid zone '{zone}'. Must be one of: {list(zones.keys())}")
-
-    zone_cfg = zones[zone]
 
     # Entities
     robot: Articulation = env.scene[robot_cfg.name]

@@ -17,29 +17,24 @@ from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
 
 from isaaclab_tasks.manager_based.manipulation.sort_maksym import mdp
 from isaaclab_tasks.manager_based.manipulation.sort_maksym.mdp import ur5e_sort_events
-from isaaclab_tasks.manager_based.manipulation.sort_maksym.sort_env_cfg import SortEnvCfg
+from isaaclab_tasks.manager_based.manipulation.sort_maksym.sort_env_cfg import SortOOAKEnvCfg as SortEnvCfg
 
-##
+# -----------------------------------------------------------------------------
 # Pre-defined configs
-##
+# -----------------------------------------------------------------------------
+
 from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
 from isaaclab_assets.robots.universal_robots_maksym import UR5e_wr_gripper_CFG
 from numpy import pi
 
 # -----------------------------------------------------------------------------
-# General nut configuration (centralized + reusable)
+# Specific parameters for the environment one of a kind
 # -----------------------------------------------------------------------------
 
 ALL_NUT_CFGS = [
     SceneEntityCfg("nut_m8_red"),
     SceneEntityCfg("nut_m8_green"),
     SceneEntityCfg("nut_m8_blue"),
-    SceneEntityCfg("nut_m12_red"),
-    SceneEntityCfg("nut_m12_green"),
-    SceneEntityCfg("nut_m12_blue"),
-    SceneEntityCfg("nut_m16_red"),
-    SceneEntityCfg("nut_m16_green"),
-    SceneEntityCfg("nut_m16_blue"),
 ]
 
 TARGET_NUT_CFG = SceneEntityCfg("nut_m8_red")
@@ -50,33 +45,38 @@ COLOR_MAP = {
     "blue":  (0.0, 0.0, 1.0),
 }
 
+INITIAL_POSE_ROBOT = [
+                7 /360*2*pi,       # shoulder_pan_joint
+                -50 /360*2*pi,     # shoulder_lift_joint
+                25 /360*2*pi,      # elbow_joint
+                -70 /360*2*pi,     # wrist_1_joint
+                -90 /360*2*pi,     # wrist_2_joint
+                95 /360*2*pi,      # wrist_3_joint
+                0.0430,            # gripper_joint_left
+                0.0430,            # gripper_joint_right
+            ]
+
+INITIAL_POSE_NUTS = [(0.3, 0.52), (-0.1, 0.55), (0.0, 0.0)] # (x, y, z) area to spawn the nuts
+
 # -----------------------------------------------------------------------------
-# Main
+# Main - same for all environments
 # -----------------------------------------------------------------------------
 
 @configclass
 class EventCfg:
     """Configuration for events."""
 
-    # Define an event to initialize the UR5e arm joint pose
+    # Initialize the UR5e arm joint pose
     init_ur5e_arm_pose = EventTerm(
         func=ur5e_sort_events.set_default_joint_pose,
         mode="reset",
         params={
             # Default for small working area:
-            "default_pose": [
-                9 /360*2*pi,            # shoulder_pan_joint
-                -65 /360*2*pi,     # shoulder_lift_joint
-                72 /360*2*pi,      # elbow_joint
-                -100 /360*2*pi,     # wrist_1_joint
-                -90 /360*2*pi,     # wrist_2_joint
-                99 /360*2*pi,      # wrist_3_joint
-                0.0430,                  # gripper_joint_left
-                0.0430,                  # gripper_joint_right
-            ],
+            "default_pose": INITIAL_POSE_ROBOT,
         },
     )
 
+    # Randomize the initial pose
     randomize_ur5e_joint_state = EventTerm(
         func=ur5e_sort_events.randomize_joint_by_gaussian_offset,
         mode="reset",
@@ -87,35 +87,14 @@ class EventCfg:
         },
     )
 
-    """# Reset all nuts - iteration version (9 nuts)
+    # Reset all nuts
     randomize_nut_positions = EventTerm(
         func=ur5e_sort_events.randomize_object_pose,
         mode="reset",
         params={
-            "pose_range": {"x": (0.3, 0.68), "y": (0.04, 0.43), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
+            "pose_range": {"x": INITIAL_POSE_NUTS[0], "y": INITIAL_POSE_NUTS[1], "z": INITIAL_POSE_NUTS[2], "yaw": (-1.0, 1, 0)},
             "min_separation": 0.1,
             "asset_cfgs": ALL_NUT_CFGS,
-        },
-    )"""
-
-    # Reset red nuts
-    randomize_nut_positions_m8 = EventTerm(
-        func=ur5e_sort_events.randomize_object_pose,
-        mode="reset",
-        params={
-            "pose_range": {"x": (0.3, 0.57), "y": (0.04, 0.43), "z": (0.0, 0.0), "yaw": (-1.0, 1, 0)},
-            "min_separation": 0.1,
-            "asset_cfgs": [
-                SceneEntityCfg("nut_m8_red"),
-                SceneEntityCfg("nut_m8_green"),
-                SceneEntityCfg("nut_m8_blue"),
-                SceneEntityCfg("nut_m12_red"),
-                SceneEntityCfg("nut_m12_green"),
-                SceneEntityCfg("nut_m12_blue"),
-                SceneEntityCfg("nut_m16_red"),
-                SceneEntityCfg("nut_m16_green"),
-                SceneEntityCfg("nut_m16_blue"),
-            ],
         },
     )
 
@@ -163,14 +142,12 @@ class UR5eSortEnvCfg(SortEnvCfg):
             disable_gravity=False,
         )
 
-        # Iteration version:
         # Spawn multiple nut sizes and colors (iteration version)
 
         for asset_cfg in ALL_NUT_CFGS:
 
-            # asset_cfg.name is like "nut_m8_red"
             # extract size and color
-            _, size, color = asset_cfg.name.split("_")   # ["nut", "m8", "red"]
+            _, size, color = asset_cfg.name.split("_")   # "nut_m8_red" -> ["nut", "m8", "red"]
 
             setattr(
                 self.scene,

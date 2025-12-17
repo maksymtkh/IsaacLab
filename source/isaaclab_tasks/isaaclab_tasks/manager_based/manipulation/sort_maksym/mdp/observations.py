@@ -15,31 +15,26 @@ from isaaclab.sensors import FrameTransformer
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
+    
 
-
-# === Common nut definitions ===
-ALL_NUT_NAMES = [
-    "nut_m8_red",
-    "nut_m8_green",
-    "nut_m8_blue",
-    "nut_m12_red",
-    "nut_m12_green",
-    "nut_m12_blue",
-    "nut_m16_red",
-    "nut_m16_green",
-    "nut_m16_blue",
-]
-
-def nut_positions_in_world_frame(env: ManagerBasedRLEnv) -> torch.Tensor:
+def nut_positions_in_world_frame(
+    env: ManagerBasedRLEnv,
+    nut_names: list[SceneEntityCfg],        
+) -> torch.Tensor:
     """The position of all nuts (m8, m12, m16 × red, green, blue) in the world frame."""
+    
     nut_positions = []
-    for nut_name in ALL_NUT_NAMES:
-        nut: RigidObject = env.scene[nut_name]
+    
+    for nut_name in nut_names:
+        nut: RigidObject = env.scene[nut_name.name]
         nut_positions.append(nut.data.root_pos_w)
+    
     return torch.cat(nut_positions, dim=1)
+
 
 def instance_randomize_nut_positions_in_world_frame(
     env: ManagerBasedRLEnv,
+    nut_names: list[SceneEntityCfg],
 ) -> torch.Tensor:
     """The position of all nuts (m8, m12, m16 × red, green, blue) in the world frame."""
     if not hasattr(env, "rigid_objects_in_focus"):
@@ -48,8 +43,8 @@ def instance_randomize_nut_positions_in_world_frame(
     nut_positions_all = []
 
     # Iterate through all defined nuts
-    for nut_name in ALL_NUT_NAMES:
-        nut: RigidObjectCollection = env.scene[nut_name]
+    for nut_name in nut_names:
+        nut: RigidObjectCollection = env.scene[nut_name.name]
         nut_pos_w = []
         for env_id in range(env.num_envs):
             # Same access pattern as your original function
@@ -62,14 +57,14 @@ def instance_randomize_nut_positions_in_world_frame(
     return torch.cat(nut_positions_all, dim=1)
 
 
-
 def nut_orientations_in_world_frame(
     env: ManagerBasedRLEnv,
+    nut_names: list[SceneEntityCfg],
 ) -> torch.Tensor:
     """The orientation of all nuts (m8, m12, m16 × red, green, blue) in the world frame."""
     nut_orientations = []
-    for nut_name in ALL_NUT_NAMES:
-        nut: RigidObject = env.scene[nut_name]
+    for nut_name in nut_names:
+        nut: RigidObject = env.scene[nut_name.name]
         nut_orientations.append(nut.data.root_quat_w)
 
     return torch.cat(nut_orientations, dim=1)
@@ -77,6 +72,7 @@ def nut_orientations_in_world_frame(
 
 def instance_randomize_nut_orientations_in_world_frame(
     env: ManagerBasedRLEnv,
+    nut_names: list[SceneEntityCfg],
 ) -> torch.Tensor:
     """The orientation of all nuts (m8, m12, m16 × red, green, blue) in the world frame."""
     if not hasattr(env, "rigid_objects_in_focus"):
@@ -85,8 +81,8 @@ def instance_randomize_nut_orientations_in_world_frame(
     nut_orientations_all = []
 
     # Iterate through all defined nuts
-    for nut_name in ALL_NUT_NAMES:
-        nut: RigidObjectCollection = env.scene[nut_name]
+    for nut_name in nut_names:
+        nut: RigidObjectCollection = env.scene[nut_name.name]
         nut_quat_w = []
         for env_id in range(env.num_envs):
             # Same access pattern as in the original function
@@ -101,10 +97,11 @@ def instance_randomize_nut_orientations_in_world_frame(
 
 def object_obs(
     env: ManagerBasedRLEnv,
+    nut_names: list[SceneEntityCfg],
     ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
 ) -> torch.Tensor:
     """
-    Object observations (for all nuts in ALL_NUT_NAMES):
+    Object observations (for all nuts in nut_names):
 
         For each nut:
             - position (world - env_origin)  -> env-frame positions
@@ -124,8 +121,8 @@ def object_obs(
     quat_list = []
     ee_rel_list = []
 
-    for nut_name in ALL_NUT_NAMES:
-        nut: RigidObject = env.scene[nut_name]
+    for nut_name in nut_names:
+        nut: RigidObject = env.scene[nut_name.name]
         pos_w = nut.data.root_pos_w          # [B, 3]
         quat_w = nut.data.root_quat_w        # [B, 4]
 
@@ -148,9 +145,9 @@ def object_obs(
     return torch.cat(obs_parts, dim=1)
 
 
-
 def instance_randomize_object_obs(
     env: ManagerBasedRLEnv,
+    nut_names: list[SceneEntityCfg],
     ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
 ):
     """
@@ -170,8 +167,8 @@ def instance_randomize_object_obs(
     # Collect per-nut world positions & orientations using the focus index per nut
     pos_w_list = []
     quat_w_list = []
-    for i, nut_name in enumerate(ALL_NUT_NAMES):
-        nut: RigidObjectCollection = env.scene[nut_name]
+    for i, nut_name in enumerate(nut_names):
+        nut: RigidObjectCollection = env.scene[nut_name.name]
         pos_each_env = []
         quat_each_env = []
         for env_id in range(env.num_envs):
@@ -190,9 +187,9 @@ def instance_randomize_object_obs(
     # Per-color pairwise deltas (world): (m8 - m12), (m12 - m16), (m8 - m16)
     pairwise_list = []
     for color in ["red", "green", "blue"]:
-        i_m8  = ALL_NUT_NAMES.index(f"nut_m8_{color}")
-        i_m12 = ALL_NUT_NAMES.index(f"nut_m12_{color}")
-        i_m16 = ALL_NUT_NAMES.index(f"nut_m16_{color}")
+        i_m8  = nut_names.index(f"nut_m8_{color}")
+        i_m12 = nut_names.index(f"nut_m12_{color}")
+        i_m16 = nut_names.index(f"nut_m16_{color}")
 
         p8  = pos_w_list[i_m8]
         p12 = pos_w_list[i_m12]

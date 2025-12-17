@@ -1,7 +1,7 @@
 {
     "algo_name": "bc",
     "experiment": {
-        "name": "bc_rnn_image_franka_stack_cosmos",
+        "name": "bc_rnn_image_ur5e_480x640",
         "validate": false,
         "logging": {
             "terminal_output_to_txt": true,
@@ -45,8 +45,8 @@
         ],
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 16,
-        "num_epochs": 600,
+        "batch_size": 6,
+        "num_epochs": 1000,
         "seed": 101
     },
     "algo": {
@@ -155,7 +155,7 @@
                     "gripper_pos"
                 ],
                 "rgb": [
-                    "table_cam"
+                    "wrist_cam_param4"
                 ],
                 "depth": [],
                 "scan": []
@@ -195,8 +195,8 @@
                 },
                 "obs_randomizer_class": "CropRandomizer",
                 "obs_randomizer_kwargs": {
-                    "crop_height": 180,
-                    "crop_width": 180,
+                    "crop_height": 480,
+                    "crop_width": 640,
                     "num_crops": 1,
                     "pos_enc": false
                 }

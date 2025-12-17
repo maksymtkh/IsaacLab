@@ -17,8 +17,16 @@ from .franka_stack_ik_rel_skillgen_env_cfg import FrankaCubeStackIKRelSkillgenEn
 from .franka_stack_ik_rel_visuomotor_cosmos_mimic_env_cfg import FrankaCubeStackIKRelVisuomotorCosmosMimicEnvCfg
 from .franka_stack_ik_rel_visuomotor_mimic_env_cfg import FrankaCubeStackIKRelVisuomotorMimicEnvCfg
 
+# -----------------------------------------------------------------------------
+# Specific parameters for UR5e
+# -----------------------------------------------------------------------------
+
 from .ur5e_sort_ik_rel_mimic_env import UR5eSortIKRelMimicEnv
-from .ur5e_sort_ik_rel_visuomotor_mimic_env_cfg import UR5eSortIKRelVisuomotorMimicEnvCfg
+from . import (
+    ur5e_sort_ik_rel_visuomotor_mimic_env_bigwa_cfg,
+    ur5e_sort_ik_rel_visuomotor_mimic_env_ooak_cfg,
+    ur5e_sort_ik_rel_visuomotor_mimic_env_smallwa_cfg,
+)
 
 ##
 # Inverse Kinematics - Relative Pose Control
@@ -56,15 +64,6 @@ gym.register(
     entry_point="isaaclab_mimic.envs:FrankaCubeStackIKRelMimicEnv",
     kwargs={
         "env_cfg_entry_point": franka_stack_ik_rel_visuomotor_mimic_env_cfg.FrankaCubeStackIKRelVisuomotorMimicEnvCfg,
-    },
-    disable_env_checker=True,
-)
-
-gym.register(
-    id="Isaac-Sort-UR5e-IK-Rel-Visuomotor-Mimic-v0",
-    entry_point="isaaclab_mimic.envs:UR5eSortIKRelMimicEnv",
-    kwargs={
-        "env_cfg_entry_point": ur5e_sort_ik_rel_visuomotor_mimic_env_cfg.UR5eSortIKRelVisuomotorMimicEnvCfg,
     },
     disable_env_checker=True,
 )
@@ -176,6 +175,37 @@ gym.register(
     entry_point=f"{__name__}.pick_place_mimic_env:PickPlaceRelMimicEnv",
     kwargs={
         "env_cfg_entry_point": f"{__name__}.agibot_place_toy2box_mimic_env_cfg:RmpFlowAgibotPlaceToy2BoxMimicEnvCfg",
+    },
+    disable_env_checker=True,
+)
+
+##
+# UR5e: Sort task, big and small working area
+##
+
+gym.register(
+    id="Isaac-Sort-BigWA-UR5e-IK-Rel-Visuomotor-Mimic-v0",
+    entry_point="isaaclab_mimic.envs:UR5eSortIKRelMimicEnv",
+    kwargs={
+        "env_cfg_entry_point": ur5e_sort_ik_rel_visuomotor_mimic_env_bigwa_cfg.UR5eSortIKRelVisuomotorMimicEnvCfg,
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-Sort-SmallWA-UR5e-IK-Rel-Visuomotor-Mimic-v0",
+    entry_point="isaaclab_mimic.envs:UR5eSortIKRelMimicEnv",
+    kwargs={
+        "env_cfg_entry_point": ur5e_sort_ik_rel_visuomotor_mimic_env_smallwa_cfg.UR5eSortIKRelVisuomotorMimicEnvCfg,
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-Sort-OOAK-UR5e-IK-Rel-Visuomotor-Mimic-v0",
+    entry_point="isaaclab_mimic.envs:UR5eSortIKRelMimicEnv",
+    kwargs={
+        "env_cfg_entry_point": ur5e_sort_ik_rel_visuomotor_mimic_env_ooak_cfg.UR5eSortIKRelVisuomotorMimicEnvCfg,
     },
     disable_env_checker=True,
 )

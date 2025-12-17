@@ -10,16 +10,24 @@ from isaaclab.devices.spacemouse import Se3SpaceMouseCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from isaaclab.utils import configclass
 
-from . import sort_joint_pos_env_cfg
-
-##
+# -----------------------------------------------------------------------------
 # Pre-defined configs
-##
+# -----------------------------------------------------------------------------
+
 from isaaclab_assets.robots.universal_robots_maksym import UR5e_HIGH_PD_CFG
 
+# -----------------------------------------------------------------------------
+# Specific parameters for the environment big working area
+# -----------------------------------------------------------------------------
+
+from .sort_joint_pos_env_smallwa_cfg import UR5eSortEnvCfg as UR5eSortSpecificCfg
+
+# -----------------------------------------------------------------------------
+# Main - same for all environments
+# -----------------------------------------------------------------------------
 
 @configclass
-class UR5eSortEnvCfg(sort_joint_pos_env_cfg.UR5eSortEnvCfg):
+class UR5eSortEnvCfg(UR5eSortSpecificCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()

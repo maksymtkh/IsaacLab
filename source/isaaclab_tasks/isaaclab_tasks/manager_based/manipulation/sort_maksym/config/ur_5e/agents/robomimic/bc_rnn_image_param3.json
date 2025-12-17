@@ -155,7 +155,7 @@
                     "gripper_pos"
                 ],
                 "rgb": [
-                    "wrist_cam"
+                    "wrist_cam_param3"
                 ],
                 "depth": [],
                 "scan": []

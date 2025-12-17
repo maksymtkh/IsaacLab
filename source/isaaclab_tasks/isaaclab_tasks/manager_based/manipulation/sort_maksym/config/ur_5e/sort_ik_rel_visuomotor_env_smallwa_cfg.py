@@ -17,16 +17,18 @@ from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, NVIDIA_NUCLEUS_DIR
 from isaaclab_tasks.manager_based.manipulation.sort_maksym import mdp
 from isaaclab_tasks.manager_based.manipulation.sort_maksym.mdp import ur5e_sort_events
 
-from . import sort_joint_pos_env_cfg
-
-##
+# -----------------------------------------------------------------------------
 # Pre-defined configs
-##
+# -----------------------------------------------------------------------------
+
 from isaaclab_assets.robots.universal_robots_maksym import UR5e_HIGH_PD_CFG  # isort: skip
 
 # -----------------------------------------------------------------------------
-# General nut configuration (centralized + reusable)
+# Specific parameters for the environment small working area
 # -----------------------------------------------------------------------------
+
+from .sort_joint_pos_env_smallwa_cfg import EventCfg as EventSpecificCfg
+from .sort_joint_pos_env_smallwa_cfg import UR5eSortEnvCfg as UR5eSortEnvSpecificCfg
 
 ALL_NUT_CFGS = [
     SceneEntityCfg("nut_m8_red"),
@@ -42,8 +44,12 @@ ALL_NUT_CFGS = [
 
 TARGET_NUT_CFG = SceneEntityCfg("nut_m8_red")
 
+# -----------------------------------------------------------------------------
+# Main - same for all environments
+# -----------------------------------------------------------------------------
+
 @configclass
-class EventCfg(sort_joint_pos_env_cfg.EventCfg):
+class EventCfg(EventSpecificCfg):
     """Configuration for events."""
 
     randomize_light = EventTerm(
@@ -131,17 +137,59 @@ class ObservationsCfg:
         actions = ObsTerm(func=mdp.last_action)
         joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
-        object = ObsTerm(func=mdp.object_obs)
-        nut_position = ObsTerm(func=mdp.nut_positions_in_world_frame)
-        nut_orientation = ObsTerm(func=mdp.nut_orientations_in_world_frame)
+        object = ObsTerm(
+            func=mdp.object_obs,
+            params={
+                "nut_names": [TARGET_NUT_CFG],
+            })
+        nut_position = ObsTerm(
+            func=mdp.nut_positions_in_world_frame,
+            params={
+                "nut_names": ALL_NUT_CFGS,
+            })
+        nut_orientation = ObsTerm(
+            func=mdp.nut_orientations_in_world_frame,
+            params={
+                "nut_names": ALL_NUT_CFGS,
+            })
         eef_pos = ObsTerm(func=mdp.ee_frame_pos)
         eef_quat = ObsTerm(func=mdp.ee_frame_quat)
         gripper_pos = ObsTerm(func=mdp.gripper_pos)
-        """table_cam = ObsTerm(
-            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("table_cam"), "data_type": "rgb", "normalize": False}
-        )"""
-        wrist_cam = ObsTerm(
-            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("wrist_cam"), "data_type": "rgb", "normalize": False}
+        wrist_cam_param1 = ObsTerm(
+            func=mdp.image, 
+            params={
+                "sensor_cfg": SceneEntityCfg("wrist_cam_param1"), 
+                "data_type": "rgb", 
+                "normalize": False}
+        )
+        wrist_cam_param2 = ObsTerm(
+            func=mdp.image, 
+            params={
+                "sensor_cfg": SceneEntityCfg("wrist_cam_param2"), 
+                "data_type": "rgb", 
+                "normalize": False}
+        )
+        wrist_cam_param2_depth = ObsTerm(
+            func=mdp.image,
+            params={
+                "sensor_cfg": SceneEntityCfg("wrist_cam_param2"),
+                "data_type": "distance_to_image_plane",
+                "normalize": True,
+            },
+        )
+        wrist_cam_param3 = ObsTerm(
+            func=mdp.image, 
+            params={
+                "sensor_cfg": SceneEntityCfg("wrist_cam_param3"), 
+                "data_type": "rgb", 
+                "normalize": False}
+        )
+        wrist_cam_param4 = ObsTerm(
+            func=mdp.image, 
+            params={
+                "sensor_cfg": SceneEntityCfg("wrist_cam_param4"), 
+                "data_type": "rgb", 
+                "normalize": False}
         )
 
         def __post_init__(self):
@@ -171,7 +219,7 @@ class ObservationsCfg:
 
 
 @configclass
-class UR5eSortVisuomotorEnvCfg(sort_joint_pos_env_cfg.UR5eSortEnvCfg):
+class UR5eSortVisuomotorEnvCfg(UR5eSortEnvSpecificCfg):
     observations: ObservationsCfg = ObservationsCfg()
 
     # Evaluation settings
@@ -201,36 +249,37 @@ class UR5eSortVisuomotorEnvCfg(sort_joint_pos_env_cfg.UR5eSortEnvCfg):
         )
 
         # Set cameras
-        # Set wrist camera
-
-        """# Camera https://docs.baslerweb.com/a2a4200-40ucpro
-        # Linse https://www.artisantg.com/info/FujiFilm_Fujinon_DF6HA_1B_Datasheet_20221281340.pdf?srsltid=AfmBOordtaVQVN59VcazBFQ4unfNV58tdwuFEP53YC3J5YpSuHa7VDs5
-        self.scene.wrist_cam = CameraCfg(
-            offset=CameraCfg.OffsetCfg(
-                pos=(-0.035, 0.0, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
-            ),
-            spawn=sim_utils.FisheyeCameraCfg(
-                projection_type="fisheyePolynomial",
-                fisheye_nominal_width=2160,
-                fisheye_nominal_height=3600,
-                fisheye_optical_centre_x=1080.0,
-                fisheye_optical_centre_y=1800.0,
-                focal_length=0.6, 
-                fisheye_max_fov=89.2,
-                f_stop=4,
-                focus_distance=0.5,
-                clipping_range=(0.01, 2),
-            ),
-            data_types=["rgb"],
-            width=2160,
-            height=3600,
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
-            update_period=40,
-        )"""
-
         # Camera Amazon https://www.amazon.de/gp/product/B07CTJ11YM/ref=ox_sc_act_title_2?smid=A1XYWUUU38OZI5&psc=1
-        self.scene.wrist_cam = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
+        self.scene.wrist_cam_param1 = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param1",
+            update_period=30,
+            height=600,
+            width=800,
+            data_types=["rgb"],
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=12, focus_distance=100,
+            ),
+            offset=CameraCfg.OffsetCfg(
+                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
+            ),
+        )
+
+        self.scene.wrist_cam_param2 = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param2",
+            update_period=30,
+            height=600,
+            width=800,
+            data_types=["rgb", "distance_to_image_plane"],
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=12, focus_distance=100,
+            ),
+            offset=CameraCfg.OffsetCfg(
+                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
+            ),
+        )
+
+        self.scene.wrist_cam_param3 = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param3",
             update_period=30,
             height=600,
             width=800,
@@ -243,38 +292,28 @@ class UR5eSortVisuomotorEnvCfg(sort_joint_pos_env_cfg.UR5eSortEnvCfg):
             ),
         )
 
-        """self.scene.wrist_cam = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
-            update_period=40,
-            height=3600,
-            width=2128,
+        self.scene.wrist_cam_param4 = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param4",
+            update_period=30,
+            height=600,
+            width=800,
             data_types=["rgb"],
             spawn=sim_utils.PinholeCameraCfg(
-                focal_length=0.6, f_stop=4
+                focal_length=12, focus_distance=0.1,
             ),
             offset=CameraCfg.OffsetCfg(
-                pos=(-0.09, 0.0, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
+                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
             ),
-        )"""
-
-        """# Set table view camera
-        self.scene.table_cam = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/table_cam",
-            update_period=0.0,
-            height=84,
-            width=84,
-            data_types=["rgb", "distance_to_image_plane"],
-            spawn=sim_utils.PinholeCameraCfg(
-                focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 2)
-            ),
-            offset=CameraCfg.OffsetCfg(
-                pos=(1.0, 0.0, 0.4), rot=(0.35355, -0.61237, -0.61237, 0.35355), convention="ros"
-            ),
-        )"""
+        )
 
         # Set settings for camera rendering
         self.rerender_on_reset = True
         self.sim.render.antialiasing_mode = "OFF"  # disable dlss
 
         # List of image observations in policy observations
-        self.image_obs_list = ["wrist_cam"]
+        self.image_obs_list = [
+            "wrist_cam_param1", 
+            "wrist_cam_param2", 
+            "wrist_cam_param3", 
+            "wrist_cam_param4",
+            ]
