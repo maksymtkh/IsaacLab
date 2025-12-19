@@ -127,7 +127,7 @@ gym.register(
     disable_env_checker=True,
 )
 
-# -----------------------------------------------------------------------------
+"""# -----------------------------------------------------------------------------
 # Inverse Kinematics Policy with Camera Parameter 1
 # -----------------------------------------------------------------------------
 
@@ -136,7 +136,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_bigwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param1.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param1.json"),
     },
     disable_env_checker=True,
 )
@@ -146,7 +146,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_smallwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param1.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_200.json"),
     },
     disable_env_checker=True,
 )
@@ -156,7 +156,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_ooak_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param1.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param1.json"),
     },
     disable_env_checker=True,
 )
@@ -170,7 +170,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_bigwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param2.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param2.json"),
     },
     disable_env_checker=True,
 )
@@ -184,7 +184,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_bigwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param3.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param3.json"),
     },
     disable_env_checker=True,
 )
@@ -194,7 +194,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_smallwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param3.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param3.json"),
     },
     disable_env_checker=True,
 )
@@ -208,7 +208,7 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_bigwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param4.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param4.json"),
     },
     disable_env_checker=True,
 )
@@ -218,7 +218,41 @@ gym.register(
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": sort_ik_rel_visuomotor_env_smallwa_cfg.UR5eSortVisuomotorEnvCfg,
-        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_param4.json"),
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_param4.json"),
+    },
+    disable_env_checker=True,
+)"""
+
+# -----------------------------------------------------------------------------
+# Inverse Kinematics Policy with Camera Parameter 1
+# -----------------------------------------------------------------------------
+
+gym.register(
+    id="Isaac-Sort-BigWA-UR5e-IK-Rel-Visuomotor-Param1-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    kwargs={
+        "env_cfg_entry_point": sort_ik_rel_visuomotor_env_bigwa_cfg.UR5eSortVisuomotorEnvCfg,
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_480x640.json"),
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-Sort-SmallWA-UR5e-IK-Rel-Visuomotor-Param1-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    kwargs={
+        "env_cfg_entry_point": sort_ik_rel_visuomotor_env_smallwa_cfg.UR5eSortVisuomotorEnvCfg,
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_480x640.json"),
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-Sort-OOAK-UR5e-IK-Rel-Visuomotor-Param1-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    kwargs={
+        "env_cfg_entry_point": sort_ik_rel_visuomotor_env_ooak_cfg.UR5eSortVisuomotorEnvCfg,
+        "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_480x640.json"),
     },
     disable_env_checker=True,
 )

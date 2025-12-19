@@ -149,39 +149,10 @@ class ObservationsCfg:
         eef_pos = ObsTerm(func=mdp.ee_frame_pos)
         eef_quat = ObsTerm(func=mdp.ee_frame_quat)
         gripper_pos = ObsTerm(func=mdp.gripper_pos)
-        wrist_cam_param1 = ObsTerm(
+        wrist_cam = ObsTerm(
             func=mdp.image, 
             params={
-                "sensor_cfg": SceneEntityCfg("wrist_cam_param1"), 
-                "data_type": "rgb", 
-                "normalize": False}
-        )
-        wrist_cam_param2 = ObsTerm(
-            func=mdp.image, 
-            params={
-                "sensor_cfg": SceneEntityCfg("wrist_cam_param2"), 
-                "data_type": "rgb", 
-                "normalize": False}
-        )
-        wrist_cam_param2_depth = ObsTerm(
-            func=mdp.image,
-            params={
-                "sensor_cfg": SceneEntityCfg("wrist_cam_param2"),
-                "data_type": "distance_to_image_plane",
-                "normalize": True,
-            },
-        )
-        wrist_cam_param3 = ObsTerm(
-            func=mdp.image, 
-            params={
-                "sensor_cfg": SceneEntityCfg("wrist_cam_param3"), 
-                "data_type": "rgb", 
-                "normalize": False}
-        )
-        wrist_cam_param4 = ObsTerm(
-            func=mdp.image, 
-            params={
-                "sensor_cfg": SceneEntityCfg("wrist_cam_param4"), 
+                "sensor_cfg": SceneEntityCfg("wrist_cam"), 
                 "data_type": "rgb", 
                 "normalize": False}
         )
@@ -244,56 +215,14 @@ class UR5eSortVisuomotorEnvCfg(UR5eSortEnvSpecificCfg):
 
         # Set cameras
         # Camera Amazon https://www.amazon.de/gp/product/B07CTJ11YM/ref=ox_sc_act_title_2?smid=A1XYWUUU38OZI5&psc=1
-        self.scene.wrist_cam_param1 = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param1",
+        self.scene.wrist_cam = CameraCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
             update_period=30,
             height=600,
             width=800,
             data_types=["rgb"],
             spawn=sim_utils.PinholeCameraCfg(
                 focal_length=12, focus_distance=100,
-            ),
-            offset=CameraCfg.OffsetCfg(
-                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
-            ),
-        )
-
-        self.scene.wrist_cam_param2 = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param2",
-            update_period=30,
-            height=600,
-            width=800,
-            data_types=["rgb", "distance_to_image_plane"],
-            spawn=sim_utils.PinholeCameraCfg(
-                focal_length=12, focus_distance=100,
-            ),
-            offset=CameraCfg.OffsetCfg(
-                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
-            ),
-        )
-
-        self.scene.wrist_cam_param3 = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param3",
-            update_period=30,
-            height=600,
-            width=800,
-            data_types=["rgb"],
-            spawn=sim_utils.PinholeCameraCfg(
-                focal_length=12, focus_distance=0.5,
-            ),
-            offset=CameraCfg.OffsetCfg(
-                pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
-            ),
-        )
-
-        self.scene.wrist_cam_param4 = CameraCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam_param4",
-            update_period=30,
-            height=600,
-            width=800,
-            data_types=["rgb"],
-            spawn=sim_utils.PinholeCameraCfg(
-                focal_length=12, focus_distance=0.1,
             ),
             offset=CameraCfg.OffsetCfg(
                 pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"
@@ -306,8 +235,5 @@ class UR5eSortVisuomotorEnvCfg(UR5eSortEnvSpecificCfg):
 
         # List of image observations in policy observations
         self.image_obs_list = [
-            "wrist_cam_param1", 
-            "wrist_cam_param2", 
-            "wrist_cam_param3", 
-            "wrist_cam_param4",
+            "wrist_cam",
             ]
