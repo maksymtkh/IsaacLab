@@ -92,7 +92,7 @@ class ObjectTableSmallWASceneCfg(InteractiveSceneCfg):
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0], rot=[0, 0, 0, 1]),
-        spawn=UsdFileCfg(usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Table_smallerwa/table_complete.usd"),
+        spawn=UsdFileCfg(usd_path=f"USD_Files/Table/table_smallwa_final.usd"),
     )
 
     # plane
@@ -127,7 +127,7 @@ class ObjectTableBigWASceneCfg(InteractiveSceneCfg):
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0], rot=[0, 0, 0, 1]),
-        spawn=UsdFileCfg(usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Table/table_complete_1.usd"),
+        spawn=UsdFileCfg(usd_path=f"USD_Files/Table/table_bigwa_final.usd"),
     )
 
     # plane

@@ -69,8 +69,14 @@ _build
 tests/
 
 # Visuals
-visuals/plot
-visuals/plots
+**/*.png
+**/*.pdf
+**/*.hdf5
+**/*.STEP
+**/*.txt
+**/*.csv
+**/olddata/**
+visuals/plot_success_rate/data/*
 
 # Docker history
 .isaac-lab-docker-history

@@ -75,7 +75,7 @@ UR5e_CFG = ArticulationCfg(
 
 UR5e_wr_gripper_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/ur5e_wr_gripper_4.usd",
+        usd_path=f"USD_Files/Robot/UR5e_with_Gripper_final.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
             max_depenetration_velocity=5.0,

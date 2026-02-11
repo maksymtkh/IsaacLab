@@ -19,6 +19,9 @@ Args:
 
 """Launch Isaac Sim Simulator first."""
 
+OUTPUT_DIR = "./visuals/plot_policy_path/datasets"
+OUTPUT_FILE_NAME = "Isaac-Sort-BigWA-UR5e-IK-Rel-v0_200Data"
+
 
 import argparse
 
@@ -74,6 +77,9 @@ if args_cli.enable_pinocchio:
 
 from isaaclab_tasks.utils import parse_env_cfg
 
+from isaaclab.envs.mdp.recorders.recorders_cfg import ActionStateRecorderManagerCfg
+from isaaclab.managers import DatasetExportMode
+
 
 def rollout(policy, env, success_term, horizon, device):
     """Perform a single rollout of the policy in the environment.
@@ -90,7 +96,10 @@ def rollout(policy, env, success_term, horizon, device):
     """
     policy.start_episode()
     obs_dict, _ = env.reset()
+    env.recorder_manager.reset()
     traj = dict(actions=[], obs=[], next_obs=[])
+
+    did_step = False
 
     for i in range(horizon):
         # Prepare observations
@@ -125,6 +134,7 @@ def rollout(policy, env, success_term, horizon, device):
 
         # Apply actions
         obs_dict, _, terminated, truncated, _ = env.step(actions)
+        did_step = True
         obs = obs_dict["policy"]
 
         # Record trajectory
@@ -133,11 +143,28 @@ def rollout(policy, env, success_term, horizon, device):
 
         # Check if rollout was successful
         if bool(success_term.func(env, **success_term.params)[0]):
-            return True, traj
-        elif terminated or truncated:
-            return False, traj
+            if did_step:
+                env.recorder_manager.record_pre_reset([0], force_export_or_skip=False)
+                env.recorder_manager.set_success_to_episodes([0], torch.tensor([[True]], dtype=torch.bool, device=env.device))
+                env.recorder_manager.export_episodes([0])
+                return True, traj
 
-    return False, traj
+        elif terminated or truncated:
+            if did_step:
+                env.recorder_manager.record_pre_reset([0], force_export_or_skip=False)
+                env.recorder_manager.set_success_to_episodes([0], torch.tensor([[False]], dtype=torch.bool, device=env.device))
+                env.recorder_manager.export_episodes([0])
+                return False, traj
+
+        
+    if did_step:
+        env.recorder_manager.record_pre_reset([0], force_export_or_skip=False)
+        env.recorder_manager.set_success_to_episodes([0], torch.tensor([[False]], dtype=torch.bool, device=env.device))
+        env.recorder_manager.export_episodes([0])
+        return False, traj
+    else:
+        print("Scheise")
+
 
 
 def main():
@@ -148,15 +175,28 @@ def main():
     # Set observations to dictionary mode for Robomimic
     env_cfg.observations.policy.concatenate_terms = False
 
-    # Set termination conditions
-    env_cfg.terminations.time_out = None
+    env_cfg.env_name = args_cli.task.split(":")[-1]
 
-    # Disable recorder
-    env_cfg.recorders = None
+
+    
 
     # Extract success checking function
-    success_term = env_cfg.terminations.success
-    env_cfg.terminations.success = None
+    success_term = None
+    if hasattr(env_cfg.terminations, "success"):
+        success_term = env_cfg.terminations.success
+        env_cfg.terminations.success = None
+    else:
+        raise NotImplementedError("No success termination term was found in the environment.")
+
+    # Set termination conditions
+    env_cfg.terminations = None
+    
+    # Setup recorders
+    env_cfg.recorders = ActionStateRecorderManagerCfg()
+    env_cfg.recorders.dataset_export_dir_path = OUTPUT_DIR
+    env_cfg.recorders.dataset_filename = OUTPUT_FILE_NAME
+
+    env_cfg.recorders.dataset_export_mode = DatasetExportMode.EXPORT_SUCCEEDED_FAILED_IN_SEPARATE_FILES
 
     # Create environment
     env = gym.make(args_cli.task, cfg=env_cfg).unwrapped

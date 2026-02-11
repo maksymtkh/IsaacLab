@@ -220,15 +220,18 @@ class UR5eSortVisuomotorEnvCfg(UR5eSortEnvSpecificCfg):
         )
 
         # Set cameras
-        # Camera Amazon https://www.amazon.de/gp/product/B07CTJ11YM/ref=ox_sc_act_title_2?smid=A1XYWUUU38OZI5&psc=1
         self.scene.wrist_cam = CameraCfg(
             prim_path="{ENV_REGEX_NS}/Robot/ur5e/Gripper/gripper_wr/camera_basler/wrist_cam",
             update_period=30,
             height=600,
             width=800,
-            data_types=["rgb"],
+            data_types=["rgb"], # Param1, Param3, Param4
+            #data_types=["rgb","distance_to_plane"], # Param2
             spawn=sim_utils.PinholeCameraCfg(
-                focal_length=12, focus_distance=100,
+                focal_length=12, focus_distance=100, # Param1
+                #focal_length=12, focus_distance=100, # Param2
+                #focal_length=12, focus_distance=0.1, # Param3
+                #focal_length=12, focus_distance=0.5, # Param4
             ),
             offset=CameraCfg.OffsetCfg(
                 pos=(-0.065, 0.004, 0.0), rot = (0.70711, 0.0, 0.70711, 0.0), convention="opengl"

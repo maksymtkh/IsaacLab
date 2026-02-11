@@ -22,6 +22,8 @@ from .franka_stack_ik_rel_visuomotor_mimic_env_cfg import FrankaCubeStackIKRelVi
 # -----------------------------------------------------------------------------
 
 from .ur5e_sort_ik_rel_mimic_env import UR5eSortIKRelMimicEnv
+from .ur5e_sort_ik_rel_mimic_env_bigwa_cfg import UR5eSortIKRelMimicEnvCfg
+from .ur5e_sort_ik_rel_mimic_env_smallwa_cfg import UR5eSortIKRelMimicEnvCfg
 from . import (
     ur5e_sort_ik_rel_visuomotor_mimic_env_bigwa_cfg,
     ur5e_sort_ik_rel_visuomotor_mimic_env_ooak_cfg,
@@ -182,6 +184,24 @@ gym.register(
 ##
 # UR5e: Sort task, big and small working area
 ##
+
+gym.register(
+    id="Isaac-Sort-BigWA-UR5e-IK-Rel-Mimic-v0",
+    entry_point="isaaclab_mimic.envs:UR5eSortIKRelMimicEnv",
+    kwargs={
+        "env_cfg_entry_point": ur5e_sort_ik_rel_mimic_env_bigwa_cfg.UR5eSortIKRelMimicEnvCfg,
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Isaac-Sort-SmallWA-UR5e-IK-Rel-Mimic-v0",
+    entry_point="isaaclab_mimic.envs:UR5eSortIKRelMimicEnv",
+    kwargs={
+        "env_cfg_entry_point": ur5e_sort_ik_rel_mimic_env_smallwa_cfg.UR5eSortIKRelMimicEnvCfg,
+    },
+    disable_env_checker=True,
+)
 
 gym.register(
     id="Isaac-Sort-BigWA-UR5e-IK-Rel-Visuomotor-Mimic-v0",

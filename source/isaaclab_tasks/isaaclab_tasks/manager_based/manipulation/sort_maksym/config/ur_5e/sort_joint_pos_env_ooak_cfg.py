@@ -159,7 +159,7 @@ class UR5eSortEnvCfg(SortEnvCfg):
                         rot=(1.0, 0.0, 0.0, 0.0),
                     ),
                     spawn=UsdFileCfg(
-                        usd_path=f"/home/MA_LaToOm/Desktop/USD_ur5e_withgripper/Nuts/nut_{size}.usd",  # "nut_m8.usd"
+                        usd_path=f"USD_Files/Nuts/nut_{size}.usd",  # "nut_m8.usd"
                         scale=(1.0, 1.0, 1.0),
                         rigid_props=nut_properties,
                         visual_material=sim_utils.PreviewSurfaceCfg(
